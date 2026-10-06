@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f766e">
+    <title>Productivity Hub</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        teal: {
+                            50: '#f0fdf4',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom Scrollbar for Phone Container */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Smooth tab animations */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Ripple & Press animation for touch */
+        .touch-active:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+
+        /* SVG Circular Timer animation */
+        .timer-circle {
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        /* Priority Pill Active States */
+        .priority-btn.active-tinggi {
+            background-color: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
+        }
+        .priority-btn.active-sedang {
+            background-color: #f59e0b;
+            color: #ffffff;
+            border-color: #f59e0b;
+        }
+        .priority-btn.active-rendah {
+            background-color: #10b981;
+            color: #ffffff;
+            border-color: #10b981;
+        }
+
+        /* Mobile Container styling for Desktop view */
+        @media (min-width: 640px) {
+            .mobile-frame {
+                height: 840px;
+                max-height: 92vh;
+                border-radius: 40px;
+                box-shadow: 0 25px 50px -12px rgba(15, 118, 110, 0.25), 0 0 0 12px #1e293b;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen flex items-center justify-center sm:p-4 select-none">
+
+    <!-- Smartphone Container Wrapper -->
+    <div class="mobile-frame w-full max-w-[420px] h-screen bg-slate-50 flex flex-col relative overflow-hidden">
+        
+        <!-- Top App Header -->
+        <header class="bg-gradient-to-r from-teal-800 to-teal-700 text-white px-5 pt-6 pb-5 shadow-md flex-shrink-0 relative z-10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] font-semibold tracking-widest text-teal-200 uppercase block" id="header-date">HARI INI</span>
+                    <h1 class="text-xl font-bold tracking-tight">Productivity Hub</h1>
+                </div>
+                <div class="bg-teal-600/50 p-2 rounded-xl backdrop-blur-md border border-teal-400/20 flex items-center justify-center">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-teal-200"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Toast Notification Box -->
+        <div id="toast" class="absolute top-20 left-4 right-4 bg-slate-900/90 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-2 transition-all duration-300 opacity-0 -translate-y-4 pointer-events-none z-50 backdrop-blur-sm">
+            <i data-lucide="info" class="w-4 h-4 text-teal-400 flex-shrink-0"></i>
+            <span id="toast-message" class="flex-1">Pesan notifikasi</span>
+        </div>
+
+        <!-- Reflection Popup Modal (Ajakan Refleksi Belajar) -->
+        <div id="reflection-modal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-5 opacity-0 pointer-events-none transition-all duration-300">
+            <div id="reflection-modal-card" class="bg-white w-full rounded-3xl p-6 shadow-2xl text-center space-y-4 transform scale-90 transition-all duration-300">
+                <div class="w-16 h-16 bg-teal-100 text-teal-700 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+                    <i data-lucide="sparkles" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">Sesi Fokus Tuntas! 🎉</h3>
+                    <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Kerja bagus! Anda telah menyelesaikan 25 menit fokus belajar. Yuk, evaluasi dan catat refleksi belajarmu di Jurnal!</p>
+                </div>
+                <div class="space-y-2 pt-1">
+                    <button onclick="goToJournalTab()" class="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white rounded-2xl text-xs font-semibold shadow-lg shadow-teal-700/25 touch-active transition-all flex items-center justify-center space-x-2">
+                        <i data-lucide="book-open" class="w-4 h-4"></i>
+                        <span>Buka Tab Jurnal</span>
+                    </button>
+                    <button onclick="closeReflectionModal()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl text-xs font-medium touch-active transition-colors">
+                        Nanti Saja
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Scrollable Content Area -->
+        <main class="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 space-y-4 relative">
+
+            <!-- TAB 1: TUGAS -->
+            <section id="tab-tugas" class="tab-content active space-y-4">
+                <!-- Task Progress Card -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xs font-medium text-slate-500">Progres Tugas</h2>
+                        <p class="text-lg font-bold text-slate-800" id="task-stats-text">0 dari 0 Selesai</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-teal-50 border-4 border-teal-500/20 flex items-center justify-center relative">
+                        <span class="text-xs font-bold text-teal-700" id="task-percentage">0%</span>
+                    </div>
+                </div>
+
+                <!-- Fast Input Form with Priority Pills -->
+                <form id="add-task-form" class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="task-input" placeholder="Tulis nama tugas baru..." required 
+                            class="flex-1 text-xs bg-slate-50 border border-slate-200 outline-none focus:border-teal-600 rounded-xl text-slate-700 placeholder-slate-400 p-2.5">
+                        <button type="submit" class="bg-teal-700 hover:bg-teal-800 text-white p-2.5 rounded-xl touch-active transition-colors flex items-center justify-center shadow-md shadow-teal-700/20">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Priority Selector Pills -->
+                    <div>
+                        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Pilih Prioritas:</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="setTaskPriority('tinggi')" id="p-pill-tinggi" 
+                                class="priority-btn text-xs font-semibold py-1.5 px-2 rounded-xl border border-slate-200 text-slate-600 bg-slate-50 transition-all flex items-center justify-center space-x-1">
+                                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                <span>Tinggi</span>
+                            </button>
+                            <button type="button" onclick="setTaskPriority('sedang')" id="p-pill-sedang" 
+                                class="priority-btn active-sedang text-xs font-semibold py-1.5 px-2 rounded-xl border border-slate-200 text-slate-600 bg-slate-50 transition-all flex items-center justify-center space-x-1">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                <span>Sedang</span>
+                            </button>
+                            <button type="button" onclick="setTaskPriority('rendah')" id="p-pill-rendah" 
+                                class="priority-btn text-xs font-semibold py-1.5 px-2 rounded-xl border border-slate-200 text-slate-600 bg-slate-50 transition-all flex items-center justify-center space-x-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span>Rendah</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Category Filter Tabs -->
+                <div class="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1">
+                    <button type="button" onclick="filterTasks('semua')" class="filter-btn text-xs font-semibold px-4 py-1.5 rounded-full bg-teal-700 text-white shadow-sm transition-all" data-filter="semua">Semua</button>
+                    <button type="button" onclick="filterTasks('aktif')" class="filter-btn text-xs font-semibold px-4 py-1.5 rounded-full bg-white text-slate-600 border border-slate-200 transition-all" data-filter="aktif">Aktif</button>
+                    <button type="button" onclick="filterTasks('selesai')" class="filter-btn text-xs font-semibold px-4 py-1.5 rounded-full bg-white text-slate-600 border border-slate-200 transition-all" data-filter="selesai">Selesai</button>
+                </div>
+
+                <!-- Touch-Friendly Task Cards List -->
+                <div id="task-list" class="space-y-2.5">
+                    <!-- Dynamic task cards inserted here via JS -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="task-empty" class="hidden flex-col items-center justify-center py-10 text-center">
+                    <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mb-3">
+                        <i data-lucide="check-circle-2" class="w-8 h-8"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-700">Tidak ada tugas ditemukan!</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Tambah tugas baru atau ganti filter kategori.</p>
+                </div>
+            </section>
+
+            <!-- TAB 2: FOKUS (TIMER) -->
+            <section id="tab-fokus" class="tab-content space-y-4">
+                <!-- Mode Switcher -->
+                <div class="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-1">
+                    <button onclick="setTimerMode('pomo')" id="mode-pomo" class="timer-mode-btn flex-1 py-2.5 text-[11px] font-semibold rounded-xl bg-teal-700 text-white transition-all text-center">Fokus (25m)</button>
+                    <button onclick="setTimerMode('short')" id="mode-short" class="timer-mode-btn flex-1 py-2.5 text-[11px] font-semibold rounded-xl bg-transparent text-slate-600 transition-all text-center">Santai (5m)</button>
+                    <button onclick="setTimerMode('long')" id="mode-long" class="timer-mode-btn flex-1 py-2.5 text-[11px] font-semibold rounded-xl bg-transparent text-slate-600 transition-all text-center">Panjang (15m)</button>
+                </div>
+
+                <!-- Main Circular Timer Display Card -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col items-center justify-center relative">
+                    <!-- Circular Progress SVG -->
+                    <div class="relative w-56 h-56 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <!-- Background Circle Track -->
+                            <circle cx="50" cy="50" r="42" stroke-width="6" class="text-slate-100 stroke-current" fill="transparent"></circle>
+                            <!-- Animated Progress Ring -->
+                            <circle id="timer-progress" cx="50" cy="50" r="42" stroke-width="6" 
+                                stroke-dasharray="263.89" stroke-dashoffset="0" stroke-linecap="round"
+                                class="text-teal-600 stroke-current timer-circle" fill="transparent"></circle>
+                        </svg>
+                        
+                        <!-- Center Time Text Display (Standard 25:00) -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <span id="timer-display" class="text-4xl font-extrabold tracking-tight text-slate-800">25:00</span>
+                            <span id="timer-status-label" class="text-[11px] font-bold text-teal-600 uppercase tracking-widest mt-1">Sesi Fokus Belajar</span>
+                        </div>
+                    </div>
+
+                    <!-- Thumb-Friendly Control Buttons -->
+                    <div class="grid grid-cols-2 gap-3 w-full max-w-xs mt-6">
+                        <button id="btn-timer-reset" onclick="resetTimer()" class="py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs touch-active transition-colors flex items-center justify-center space-x-2">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4 text-slate-500"></i>
+                            <span>Atur Ulang</span>
+                        </button>
+
+                        <button id="btn-timer-toggle" onclick="toggleTimer()" class="py-3 px-4 rounded-2xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs shadow-lg shadow-teal-700/30 touch-active transition-all flex items-center justify-center space-x-2">
+                            <i id="timer-icon" data-lucide="play" class="w-4 h-4"></i>
+                            <span id="timer-btn-text">Mulai</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Focus Sessions Counter Card -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2.5 bg-teal-50 rounded-xl text-teal-700">
+                            <i data-lucide="award" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-medium text-slate-500">Sesi Selesai Hari Ini</h3>
+                            <p class="text-base font-bold text-slate-800" id="sessions-count">0 Sesi Fokus</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleAudioChime()" id="btn-audio-toggle" class="text-xs px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 flex items-center space-x-1">
+                        <i data-lucide="volume-2" id="audio-icon" class="w-3.5 h-3.5"></i>
+                        <span id="audio-status">Suara ON</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- TAB 3: JURNAL -->
+            <section id="tab-jurnal" class="tab-content space-y-4">
+                <!-- Add Journal Form Card -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-3.5">
+                    <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+                        <div class="flex items-center space-x-2">
+                            <div class="p-2 bg-teal-50 text-teal-700 rounded-xl">
+                                <i data-lucide="book-open" class="w-4 h-4"></i>
+                            </div>
+                            <h2 class="text-sm font-bold text-slate-800">Catatan Refleksi Belajar</h2>
+                        </div>
+                        <span id="journal-current-date" class="text-[10px] bg-teal-50 text-teal-700 font-semibold px-2.5 py-1 rounded-full border border-teal-200/60">Hari Ini</span>
+                    </div>
+
+                    <!-- Date & Subject Input Row -->
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label for="journal-date" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Tanggal</label>
+                            <input type="date" id="journal-date" 
+                                class="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-teal-600 text-slate-700 font-medium">
+                        </div>
+                        <div>
+                            <label for="journal-subject" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Mata Pelajaran</label>
+                            <select id="journal-subject" 
+                                class="w-full text-xs p-2.5 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-teal-600 text-slate-700 font-medium">
+                                <option value="Matematika">Matematika</option>
+                                <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                                <option value="Bahasa Inggris">Bahasa Inggris</option>
+                                <option value="Biologi/IPA">Biologi / IPA</option>
+                                <option value="Fisika/Kimia">Fisika / Kimia</option>
+                                <option value="Sejarah/IPS">Sejarah / IPS</option>
+                                <option value="Informatika">Informatika / IT</option>
+                                <option value="Lainnya" selected>Lainnya / General</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Mood Selector -->
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Perasaan / Mood Belajar</label>
+                        <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100">
+                            <button type="button" onclick="selectMood('😊')" class="mood-btn p-2 text-xl rounded-lg hover:bg-white transition-all border border-teal-500 bg-white shadow-sm scale-110" data-mood="😊" title="Senang">😊</button>
+                            <button type="button" onclick="selectMood('🚀')" class="mood-btn p-2 text-xl rounded-lg hover:bg-white transition-all border border-transparent" data-mood="🚀" title="Produktif">🚀</button>
+                            <button type="button" onclick="selectMood('😌')" class="mood-btn p-2 text-xl rounded-lg hover:bg-white transition-all border border-transparent" data-mood="😌" title="Tenang">😌</button>
+                            <button type="button" onclick="selectMood('⚡')" class="mood-btn p-2 text-xl rounded-lg hover:bg-white transition-all border border-transparent" data-mood="⚡" title="Semangat">⚡</button>
+                            <button type="button" onclick="selectMood('🧘')" class="mood-btn p-2 text-xl rounded-lg hover:bg-white transition-all border border-transparent" data-mood="🧘" title="Fokus">🧘</button>
+                        </div>
+                    </div>
+
+                    <!-- Reflection Notes Textarea -->
+                    <div>
+                        <label for="journal-input" class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Catatan Refleksi Pemahaman Materi</label>
+                        <textarea id="journal-input" rows="3" placeholder="Tuliskan poin penting yang sudah dipahami, bagian yang masih membingungkan, atau rencana belajar berikutnya..." 
+                            class="w-full text-xs p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-teal-600 text-slate-700 resize-none leading-relaxed placeholder-slate-400"></textarea>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button type="button" onclick="saveJournalEntry()" class="w-full py-3 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-semibold shadow-md shadow-teal-700/20 touch-active transition-colors flex items-center justify-center space-x-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Simpan Catatan Refleksi</span>
+                    </button>
+                </div>
+
+                <!-- Journal Entries List -->
+                <div>
+                    <div class="flex items-center justify-between mb-2 px-1">
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Riwayat Catatan Refleksi</h3>
+                        <span id="journal-count-badge" class="text-[10px] font-semibold text-slate-400 bg-slate-200/60 px-2 py-0.5 rounded-full">0 Catatan</span>
+                    </div>
+                    <div id="journal-list" class="space-y-2.5">
+                        <!-- Dynamic Journal entries inserted here -->
+                    </div>
+                    <div id="journal-empty" class="hidden flex-col items-center justify-center py-10 text-center">
+                        <div class="w-14 h-14 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-2">
+                            <i data-lucide="journal" class="w-7 h-7"></i>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-600">Belum Ada Catatan Refleksi</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Isi formulir di atas setelah menyelesaikan sesi belajar.</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- BOTTOM NAVIGATION BAR -->
+        <nav class="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200/80 px-3 py-2 flex items-center justify-around z-30 shadow-lg">
+            
+            <!-- Tab 1: Tugas -->
+            <button onclick="switchTab('tugas')" id="nav-tugas" class="nav-tab active flex-1 py-1 flex flex-col items-center justify-center text-teal-700 transition-all touch-active">
+                <i data-lucide="check-square" class="w-5 h-5 mb-0.5"></i>
+                <span class="text-[10px] font-semibold">Tugas</span>
+            </button>
+
+            <!-- Tab 2: Fokus -->
+            <button onclick="switchTab('fokus')" id="nav-fokus" class="nav-tab flex-1 py-1 flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 transition-all touch-active">
+                <i data-lucide="timer" class="w-5 h-5 mb-0.5"></i>
+                <span class="text-[10px] font-semibold">Fokus</span>
+            </button>
+
+            <!-- Tab 3: Jurnal -->
+            <button onclick="switchTab('jurnal')" id="nav-jurnal" class="nav-tab flex-1 py-1 flex flex-col items-center justify-center text-slate-400 hover:text-slate-600 transition-all touch-active">
+                <i data-lucide="book-open" class="w-5 h-5 mb-0.5"></i>
+                <span class="text-[10px] font-semibold">Jurnal</span>
+            </button>
+
+        </nav>
+
+    </div>
+
+    <script>
+        // UTILITY FUNCTIONS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // APP STATE & LOCAL STORAGE KEYS
+        const STORAGE_KEY_TASKS = 'prod_hub_tasks_v1';
+        const STORAGE_KEY_SESSIONS = 'prod_hub_sessions_v1';
+        const STORAGE_KEY_JOURNALS = 'prod_hub_journals_v1';
+
+        // State variables
+        let tasks = [];
+        let journals = [];
+        let completedSessions = 0;
+        let currentFilter = 'semua';
+        let currentPriority = 'sedang';
+        let selectedMood = '😊';
+        let isAudioEnabled = true;
+
+        // Timer State Variables
+        let timerMode = 'pomo'; // 'pomo', 'short', 'long'
+        const timerConfig = {
+            pomo: 25 * 60,
+            short: 5 * 60,
+            long: 15 * 60
+        };
+        let timeLeft = timerConfig.pomo;
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        // INITIALIZATION ON LOAD
+        window.addEventListener('DOMContentLoaded', () => {
+            loadInitialData();
+            setupHeaderDate();
+            setupJournalDateField();
+            renderTasks();
+            renderJournals();
+            updateTimerDisplay();
+            lucide.createIcons();
+
+            // Task form submit handler
+            document.getElementById('add-task-form').addEventListener('submit', handleAddTask);
+        });
+
+        function setupJournalDateField() {
+            const dateInput = document.getElementById('journal-date');
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+            }
+        }
+
+        function loadInitialData() {
+            try {
+                const loadedTasks = localStorage.getItem(STORAGE_KEY_TASKS);
+                tasks = loadedTasks ? JSON.parse(loadedTasks) : [
+                    { id: 1, title: 'Menyelesaikan Tugas Matematika', priority: 'tinggi', completed: false, createdAt: Date.now() },
+                    { id: 2, title: 'Membaca Bab 3 Biologi', priority: 'sedang', completed: true, createdAt: Date.now() - 100000 }
+                ];
+
+                const loadedJournals = localStorage.getItem(STORAGE_KEY_JOURNALS);
+                journals = loadedJournals ? JSON.parse(loadedJournals) : [
+                    { id: 1, subject: 'Matematika', mood: '🚀', content: 'Memahami rumus matriks dan menyelesaikan 5 soal latihan tanpa rasa bingung!', date: '2026-10-06', displayDate: '06 Okt 2026', time: '09:00' }
+                ];
+
+                completedSessions = parseInt(localStorage.getItem(STORAGE_KEY_SESSIONS)) || 0;
+                document.getElementById('sessions-count').innerText = `${completedSessions} Sesi Fokus`;
+            } catch (e) {
+                console.error("Storage loading error:", e);
+            }
+        }
+
+        function setupHeaderDate() {
+            const now = new Date();
+            const options = { weekday: 'long', day: 'numeric', month: 'short' };
+            const formatted = now.toLocaleDateString('id-ID', options).toUpperCase();
+            document.getElementById('header-date').innerText = formatted;
+            document.getElementById('journal-current-date').innerText = `${now.getDate()} ${now.toLocaleDateString('id-ID', { month: 'short' })}`;
+        }
+
+        // TAB SWITCHING
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.querySelectorAll('.nav-tab').forEach(nav => {
+                nav.classList.remove('text-teal-700');
+                nav.classList.add('text-slate-400');
+            });
+
+            const targetTab = document.getElementById(`tab-${tabName}`);
+            const targetNav = document.getElementById(`nav-${tabName}`);
+
+            if (targetTab && targetNav) {
+                targetTab.classList.add('active');
+                targetNav.classList.remove('text-slate-400');
+                targetNav.classList.add('text-teal-700');
+            }
+        }
+
+        // TOAST NOTIFICATION SYSTEM
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+
+            toastMsg.innerText = message;
+            toast.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
+            }, 2600);
+        }
+
+        // NATIVE WEB AUDIO SYNTHESIZER (3-tone pleasant alarm chime)
+        function playChimeSound() {
+            if (!isAudioEnabled) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const audioCtx = new AudioContext();
+
+                const now = audioCtx.currentTime;
+                const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 major chord arpeggio
+
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+
+                    gain.gain.setValueAtTime(0.25, now + idx * 0.15);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.15 + 0.4);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(now + idx * 0.15);
+                    osc.stop(now + idx * 0.15 + 0.4);
+                });
+            } catch (e) {
+                console.log('Audio error:', e);
+            }
+        }
+
+        function toggleAudioChime() {
+            isAudioEnabled = !isAudioEnabled;
+            const icon = document.getElementById('audio-icon');
+            const status = document.getElementById('audio-status');
+
+            if (isAudioEnabled) {
+                icon.setAttribute('data-lucide', 'volume-2');
+                status.innerText = 'Suara ON';
+                showToast('Suara alarm diaktifkan');
+            } else {
+                icon.setAttribute('data-lucide', 'volume-x');
+                status.innerText = 'Suara OFF';
+                showToast('Suara alarm dimatikan');
+            }
+            lucide.createIcons();
+        }
+
+        // TASK PRIORITY SELECTION
+        function setTaskPriority(p) {
+            currentPriority = p;
+            document.querySelectorAll('.priority-btn').forEach(btn => {
+                btn.className = "priority-btn text-xs font-semibold py-1.5 px-2 rounded-xl border border-slate-200 text-slate-600 bg-slate-50 transition-all flex items-center justify-center space-x-1";
+            });
+
+            const activeBtn = document.getElementById(`p-pill-${p}`);
+            if (activeBtn) {
+                activeBtn.classList.add(`active-${p}`);
+            }
+        }
+
+        // TASK FUNCTIONS
+        function handleAddTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('task-input');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            const newTask = {
+                id: Date.now(),
+                title: text,
+                priority: currentPriority,
+                completed: false,
+                createdAt: Date.now()
+            };
+
+            tasks.unshift(newTask);
+            saveTasksToStorage();
+
+            input.value = '';
+            renderTasks();
+            showToast('Tugas baru ditambahkan!');
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+            saveTasksToStorage();
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasksToStorage();
+            renderTasks();
+            showToast('Tugas telah dihapus');
+        }
+
+        function filterTasks(f) {
+            currentFilter = f;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === f) {
+                    btn.className = "filter-btn text-xs font-semibold px-4 py-1.5 rounded-full bg-teal-700 text-white shadow-sm transition-all";
+                } else {
+                    btn.className = "filter-btn text-xs font-semibold px-4 py-1.5 rounded-full bg-white text-slate-600 border border-slate-200 transition-all";
+                }
+            });
+            renderTasks();
+        }
+
+        function saveTasksToStorage() {
+            localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(tasks));
+        }
+
+        function renderTasks() {
+            const listEl = document.getElementById('task-list');
+            const emptyEl = document.getElementById('task-empty');
+
+            let filtered = tasks;
+            if (currentFilter === 'aktif') filtered = tasks.filter(t => !t.completed);
+            if (currentFilter === 'selesai') filtered = tasks.filter(t => t.completed);
+
+            // Progress Bar Stats
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+            document.getElementById('task-stats-text').innerText = `${completed} dari ${total} Selesai`;
+            document.getElementById('task-percentage').innerText = `${pct}%`;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                emptyEl.classList.add('flex');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            emptyEl.classList.remove('flex');
+
+            const priorityBadge = {
+                tinggi: '<span class="text-[9px] font-bold uppercase tracking-wider text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100">Tinggi</span>',
+                sedang: '<span class="text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">Sedang</span>',
+                rendah: '<span class="text-[9px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">Rendah</span>'
+            };
+
+            listEl.innerHTML = filtered.map(t => `
+                <div class="bg-white rounded-2xl p-3 shadow-sm border border-slate-100 flex items-center justify-between transition-all ${t.completed ? 'opacity-60 bg-slate-50' : ''}">
+                    <div class="flex items-center space-x-3 flex-1 min-w-0 pr-2">
+                        <button type="button" onclick="toggleTask(${t.id})" class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${t.completed ? 'bg-teal-600 border-teal-600 text-white' : 'border-slate-300 text-transparent hover:border-teal-500'}">
+                            <i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>
+                        </button>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-medium ${t.completed ? 'line-through text-slate-400' : 'text-slate-800'} truncate">${escapeHtml(t.title)}</p>
+                            <div class="mt-0.5 flex items-center">
+                                ${priorityBadge[t.priority] || ''}
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="deleteTask(${t.id})" class="text-slate-300 hover:text-rose-500 p-1.5 transition-colors flex-shrink-0">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        // TIMER LOGIC & REFLECTION MODAL
+        function setTimerMode(mode) {
+            if (isTimerRunning) pauseTimer();
+            timerMode = mode;
+            timeLeft = timerConfig[mode];
+
+            document.querySelectorAll('.timer-mode-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-700', 'text-white');
+                btn.classList.add('bg-transparent', 'text-slate-600');
+            });
+
+            const activeBtn = document.getElementById(`mode-${mode}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-transparent', 'text-slate-600');
+                activeBtn.classList.add('bg-teal-700', 'text-white');
+            }
+
+            const labels = { pomo: 'Sesi Fokus Belajar', short: 'Istirahat Santai', long: 'Istirahat Panjang' };
+            document.getElementById('timer-status-label').innerText = labels[mode];
+
+            updateTimerDisplay();
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            isTimerRunning = true;
+            document.getElementById('timer-btn-text').innerText = 'Jeda';
+            const icon = document.getElementById('timer-icon');
+            icon.setAttribute('data-lucide', 'pause');
+            lucide.createIcons();
+
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    handleTimerComplete();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isTimerRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('timer-btn-text').innerText = 'Mulai';
+            const icon = document.getElementById('timer-icon');
+            icon.setAttribute('data-lucide', 'play');
+            lucide.createIcons();
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = timerConfig[timerMode];
+            updateTimerDisplay();
+        }
+
+        function handleTimerComplete() {
+            pauseTimer();
+            playChimeSound();
+
+            if (timerMode === 'pomo') {
+                completedSessions++;
+                localStorage.setItem(STORAGE_KEY_SESSIONS, completedSessions);
+                document.getElementById('sessions-count').innerText = `${completedSessions} Sesi Fokus`;
+                showReflectionModal();
+            } else {
+                showToast('Waktu istirahat selesai! Siap kembali fokus?');
+            }
+
+            resetTimer();
+        }
+
+        // REFLECTION POPUP MODAL LOGIC
+        function showReflectionModal() {
+            const modal = document.getElementById('reflection-modal');
+            const card = document.getElementById('reflection-modal-card');
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+            card.classList.remove('scale-90');
+            card.classList.add('scale-100');
+        }
+
+        function closeReflectionModal() {
+            const modal = document.getElementById('reflection-modal');
+            const card = document.getElementById('reflection-modal-card');
+            
+            card.classList.remove('scale-100');
+            card.classList.add('scale-90');
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function goToJournalTab() {
+            closeReflectionModal();
+            switchTab('jurnal');
+            showToast('Tuliskan evaluasi belajar Anda!');
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timer-display').innerText = formatted;
+
+            const totalDuration = timerConfig[timerMode];
+            const progressRatio = timeLeft / totalDuration;
+            const circle = document.getElementById('timer-progress');
+            const circumference = 263.89; // 2 * PI * r (r=42)
+            circle.style.strokeDashoffset = circumference * (1 - progressRatio);
+        }
+
+        // JOURNAL LOGIC
+        function selectMood(emoji) {
+            selectedMood = emoji;
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                if (btn.dataset.mood === emoji) {
+                    btn.classList.add('bg-white', 'border-teal-500', 'shadow-sm', 'scale-110');
+                    btn.classList.remove('border-transparent');
+                } else {
+                    btn.classList.remove('bg-white', 'border-teal-500', 'shadow-sm', 'scale-110');
+                    btn.classList.add('border-transparent');
+                }
+            });
+        }
+
+        function saveJournalEntry() {
+            const input = document.getElementById('journal-input');
+            const subjectSelect = document.getElementById('journal-subject');
+            const dateInput = document.getElementById('journal-date');
+
+            const content = input.value.trim();
+            const subject = subjectSelect ? subjectSelect.value : 'Lainnya';
+            const rawDate = dateInput && dateInput.value ? dateInput.value : new Date().toISOString().split('T')[0];
+
+            if (!content) {
+                showToast('Tuliskan catatan refleksi terlebih dahulu.');
+                return;
+            }
+
+            const parsedDate = new Date(rawDate + 'T00:00:00');
+            const displayDateFormatted = parsedDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            
+            const now = new Date();
+            const timeFormatted = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            const newEntry = {
+                id: Date.now(),
+                subject: subject,
+                mood: selectedMood,
+                content: content,
+                date: rawDate,
+                displayDate: displayDateFormatted,
+                time: timeFormatted
+            };
+
+            journals.unshift(newEntry);
+            localStorage.setItem(STORAGE_KEY_JOURNALS, JSON.stringify(journals));
+
+            // Reset Form Fields
+            input.value = '';
+            setupJournalDateField();
+            renderJournals();
+            showToast('Catatan refleksi berhasil disimpan!');
+        }
+
+        function deleteJournal(id) {
+            journals = journals.filter(j => j.id !== id);
+            localStorage.setItem(STORAGE_KEY_JOURNALS, JSON.stringify(journals));
+            renderJournals();
+            showToast('Catatan refleksi dihapus');
+        }
+
+        function renderJournals() {
+            const listEl = document.getElementById('journal-list');
+            const emptyEl = document.getElementById('journal-empty');
+            const countBadge = document.getElementById('journal-count-badge');
+
+            if (countBadge) {
+                countBadge.innerText = `${journals.length} Catatan`;
+            }
+
+            if (journals.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                emptyEl.classList.add('flex');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            emptyEl.classList.remove('flex');
+
+            // Sort journals by date/timestamp descending
+            const sortedJournals = [...journals].sort((a, b) => b.id - a.id);
+
+            listEl.innerHTML = sortedJournals.map(item => `
+                <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-100 space-y-2.5 transition-all">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xl flex-shrink-0" title="Mood: ${item.mood}">${item.mood}</span>
+                            <div class="flex items-center space-x-1.5 flex-wrap">
+                                <span class="text-[10px] font-bold text-teal-800 bg-teal-50 border border-teal-200/80 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                    ${escapeHtml(item.subject || 'Lainnya')}
+                                </span>
+                                <span class="text-[10px] font-medium text-slate-400">
+                                    ${escapeHtml(item.displayDate || item.date || 'Hari ini')} • ${escapeHtml(item.time || '')}
+                                </span>
+                            </div>
+                        </div>
+                        <button type="button" onclick="deleteJournal(${item.id})" class="text-slate-300 hover:text-rose-500 p-1.5 transition-colors flex-shrink-0" title="Hapus Catatan">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">${escapeHtml(item.content)}</p>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+// ... existing code me ...
